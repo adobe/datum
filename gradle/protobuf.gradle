@@ -1,0 +1,19 @@
+task compileProto << {
+  def protoc = """protoc --java_out=${project.projectDir}/src/main/java
+                         --proto_path=${project.projectDir}/src/main/proto
+                         ${project.projectDir}/src/main/proto/datum.proto""".execute()
+  protoc.in.eachLine { logger.info(it) }
+  protoc.err.eachLine { logger.error(it) }
+  if (protoc.waitFor() != 0) {
+    throw new GradleException('unable to compile protocol buffer spec')
+  }
+}
+
+compileProto.onlyIf {
+  def protocTestProc = 'which protoc'.execute()
+  protocTestProc.in.eachLine { logger.info(it) }
+  protocTestProc.err.eachLine { logger.error(it) }
+  protocTestProc.waitFor() == 0
+}
+
+tasks.getByName('compileJava').dependsOn compileProto

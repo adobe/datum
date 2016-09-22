@@ -1,0 +1,22 @@
+ext {
+  description = 'Client library to talk to datum server'
+
+  coverageLimits = [
+      'instruction': 0,
+      'branch'     : 0,
+      'line'       : 0,
+      'complexity' : 0,
+      'method'     : 0,
+      'class'      : 0
+  ]
+}
+
+dependencies {
+  compile project(':datum-common')
+
+  compile libraries.guava
+  compile libraries.netty
+  compile libraries.jsr
+
+  testCompile test_libraries.spock
+}

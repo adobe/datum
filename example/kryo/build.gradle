@@ -1,0 +1,24 @@
+ext {
+  description = 'A example app that showcases how to use kryo to do streaming data transfer using datum.'
+
+  coverageLimits = [
+      'instruction': 0,
+      'branch'     : 0,
+      'line'       : 0,
+      'complexity' : 0,
+      'method'     : 0,
+      'class'      : 0
+  ]
+}
+
+dependencies {
+  compile project(':datum-common')
+  compile project(':datum-server')
+  compile project(':datum-client')
+  compile project(':datum-example-data-model')
+
+  compile libraries.kryo
+  compile libraries.kryo_serializers
+  compile libraries.slf4j_log4j
+  compile libraries.log4j
+}

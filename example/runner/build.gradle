@@ -1,0 +1,35 @@
+apply plugin: 'application'
+
+mainClassName = 'com.adobe.datum.example.runner.ExampleRunner'
+
+applicationDefaultJvmArgs = ['-Ddatum.host=0.0.0.0',
+                             '-Ddatum.port=8643']
+
+ext {
+  description = 'Module that bundles all examples in one for easy execution'
+
+  coverageLimits = [
+      'instruction': 0,
+      'branch'     : 0,
+      'line'       : 0,
+      'complexity' : 0,
+      'method'     : 0,
+      'class'      : 0
+  ]
+}
+
+dependencies {
+  compile project(':datum-client')
+  compile project(':datum-common')
+  compile project(':datum-server')
+  compile project(':datum-example-protobuf')
+  compile project(':datum-example-serializable')
+  compile project(':datum-example-json')
+  compile project(':datum-example-kryo')
+}
+
+run {
+  if (project.hasProperty('appType')) {
+    args project.property('appType')
+  }
+}

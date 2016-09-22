@@ -1,0 +1,21 @@
+rootProject.name = 'datum'
+
+include 'datum-common'
+include 'datum-client'
+include 'datum-server'
+include 'datum-example-data-model'
+include 'datum-example-runner'
+include 'datum-example-protobuf'
+include 'datum-example-serializable'
+include 'datum-example-json'
+include 'datum-example-kryo'
+
+project(':datum-common').projectDir = new File(rootDir, 'common')
+project(':datum-client').projectDir = new File(rootDir, 'client')
+project(':datum-server').projectDir = new File(rootDir, 'server')
+project(':datum-example-data-model').projectDir = new File(rootDir, 'example/data-model')
+project(':datum-example-runner').projectDir = new File(rootDir, 'example/runner')
+project(':datum-example-protobuf').projectDir = new File(rootDir, 'example/protobuf')
+project(':datum-example-serializable').projectDir = new File(rootDir, 'example/serializable')
+project(':datum-example-json').projectDir = new File(rootDir, 'example/json')
+project(':datum-example-kryo').projectDir = new File(rootDir, 'example/kryo')

@@ -1,0 +1,72 @@
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+apply from: "${rootDir}/gradle/pom_config.gradle"
+apply from: "${rootDir}/gradle/packaging.gradle"
+
+ext {
+  gpgPassphrase = project.hasProperty('gpgPassphrase') ? project.property('gpgPassphrase') : System.env['GPG_PASSPHRASE']
+  ossUser = project.hasProperty('ossUser') ? project.property('ossUser') : System.env['OSS_USER']
+  ossPassword = project.hasProperty('ossPassword') ? project.property('ossPassword') : System.env['OSS_PASSWORD']
+
+  releaseExt = {
+    versionedFiles << [
+        'README.md': [
+            74: '  compile \'com.adobe.datum:datum-server:$nextVersion\''
+        ]
+    ]
+  }
+}
+
+publishing {
+  repositories {
+    configure(rootProject.ext.releaseRepos)  // gradle-release-plugin sets up the release repos
+  }
+
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      artifact(sourcesJar) {
+        classifier "sources"
+      }
+      artifact(javadocJar) {
+        classifier = 'javadoc'
+      }
+      pom.withXml pomConfig
+    }
+  }
+}
+
+bintray {
+  user = bintrayUser
+  key = bintrayKey
+  publications = ['mavenJava']
+  dryRun = project.hasProperty('dryRun') ? Boolean.valueOf(project.property('dryRun')) : false
+  publish = true
+  pkg {
+    name = 'datum'
+    repo = 'libraries'
+    desc = 'Build streaming application using async non-blocking I/O.'
+    websiteUrl = 'https://github.com/anshulverma/datum'
+    issueTrackerUrl = 'https://github.com/anshulverma/datum/issues'
+    vcsUrl = 'https://github.com/anshulverma/datum.git'
+    licenses = ['Apache-2.0']
+    labels = ['streaming', 'async-io', 'non-blocking', 'client-server']
+    publicDownloadNumbers = true
+    version {
+      vcsTag = "v$project.version"
+
+      gpg {
+        sign = true
+        passphrase = "$gpgPassphrase"
+      }
+
+      mavenCentralSync {
+        sync = true
+        user = "$ossUser"
+        password = "$ossPassword"
+        close = '1'
+      }
+    }
+  }
+}

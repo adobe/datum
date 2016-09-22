@@ -1,0 +1,23 @@
+<FindBugsFilter>
+
+  <!-- protobuf -->
+  <Match>
+    <Package name="com.adobe.datum.common.api"/>
+  </Match>
+  <Match>
+    <Package name="com.adobe.datum.example.protobuf.api"/>
+  </Match>
+
+  <!-- not calling "await()" in a loop -->
+  <Match>
+    <Class name="com.adobe.datum.client.BlockingDatumClient"/>
+    <Bug code="Wa"/>
+  </Match>
+
+  <!-- ignoring the return value of await() -->
+  <Match>
+    <Class name="com.adobe.datum.common.handler.DatumChannelUploadHandler"/>
+    <Bug code="RV"/>
+  </Match>
+
+</FindBugsFilter>

@@ -1,0 +1,282 @@
+apply plugin: 'org.kordamp.gradle.stats'
+apply plugin: 'net.anshulverma.gradle.estilo'
+apply plugin: 'jacoco'
+apply plugin: 'findbugs'
+apply plugin: 'pmd'
+apply plugin: 'codenarc'
+
+tasks.withType(JavaCompile) {
+  options.encoding = 'UTF-8'
+  options.compilerArgs << '-Xlint:all'
+}
+
+javadoc.options.links('http://docs.oracle.com/javase/8/docs/api/');
+
+stats {
+  formats = ['xml', 'html', 'txt']
+}
+
+estilo {
+  source 'google'
+
+  ignoreWarnings false
+
+  checks {
+    CustomImportOrder(override: true) {
+      specialImportsRegExp 'com.adobe'
+      sortImportsInGroupAlphabetically true
+      customImportOrderRules 'SPECIAL_IMPORTS' +
+                                 '###THIRD_PARTY_PACKAGE' +
+                                 '###STANDARD_JAVA_PACKAGE' +
+                                 '###STATIC'
+      separateLineBetweenGroups false
+    }
+
+    EmptyLineSeparator(override: true) {
+      allowNoEmptyLineBetweenFields true
+      allowMultipleEmptyLines false
+      tokens 'PACKAGE_DEF, CLASS_DEF, ENUM_DEF, ' +
+                 'INTERFACE_DEF, CTOR_DEF, METHOD_DEF, ' +
+                 'STATIC_INIT, INSTANCE_INIT, VARIABLE_DEF'
+    }
+
+    LineLength {
+      max 120
+    }
+
+    AbbreviationAsWordInName {
+      allowedAbbreviationLength 3
+    }
+
+    JavadocParagraph {
+      allowNewlineParagraph false
+    }
+
+    JavadocMethod(remove: true)
+
+    JavadocType {
+      authorFormat 'Adobe Systems Inc\\.'
+      scope 'public'
+    }
+
+    MethodTypeParameterName(remove: true)
+    ClassTypeParameterName(remove: true)
+  }
+
+  suppressions {
+    suffix('Test.java') {
+      checks 'LineLength'
+    }
+    suffix('DatumProto.java') {
+      checks '.*'
+    }
+    suffix('ExampleProto.java') {
+      checks '.*'
+    }
+  }
+
+  importControl('com.adobe.datum') {
+    allow pkg: 'com.adobe.datum'
+
+    allow pkg: 'java'
+    allow pkg: 'javax'
+    allow pkg: 'org'
+    allow pkg: 'lombok'
+    allow pkg: 'io.netty'
+    allow pkg: 'com.google.protobuf'
+    allow pkg: 'com.google.common'
+    allow pkg: 'com.fasterxml.jackson'
+    allow pkg: 'com.esotericsoftware'
+    allow pkg: 'de.javakaffee.kryoserializers'
+  }
+
+  header regexp: true,
+         multiLines: [23, 24, 26, 28],
+         template:
+'''^/\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*$
+^ \\* Copyright 2016 Adobe Systems Incorporated\\.$
+^ \\*$
+^ \\* <p>$
+^ \\* Licensed under the Apache License, Version 2\\.0 \\(the "License"\\);$
+^ \\* you may not use this file except in compliance with the License\\.$
+^ \\* You may obtain a copy of the License at$
+^ \\*$
+^ \\* <p>$
+^ \\*     http://www\\.apache\\.org/licenses/LICENSE-2\\.0$
+^ \\*$
+^ \\* <p>$
+^ \\* Unless required by applicable law or agreed to in writing, software$
+^ \\* distributed under the License is distributed on an "AS IS" BASIS,$
+^ \\* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\\.$
+^ \\* See the License for the specific language governing permissions and$
+^ \\* limitations under the License\\.$
+^ \\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*/$
+^$
+^package
+^$
+'''
+}
+
+jacoco {
+  toolVersion = "$plugin_versions.jacoco"
+  reportsDir = file("$buildDir/jacoco")
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled true
+    html.enabled true
+  }
+
+  afterEvaluate {
+    classDirectories = files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: ['**/DatumProto**', '**/ExampleProto**'])
+    })
+  }
+
+  doLast {
+    def report = file("${jacoco.reportsDir}/test/jacocoTestReport.xml")
+    logger.lifecycle("Checking coverage results: ${report}")
+
+    def parser = new XmlParser()
+    parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+    def results = parser.parse(report)
+
+    def percentage = {
+      if (it == null) {
+        return 100
+      }
+      def covered = it.'@covered' as Double
+      def missed = it.'@missed' as Double
+      ((covered / (covered + missed)) * 100).round(2)
+    }
+
+    def counters = results.counter
+    def metrics = [:]
+    metrics << [
+        'instruction': percentage(counters.find { it.'@type'.equals('INSTRUCTION') }),
+        'branch'     : percentage(counters.find { it.'@type'.equals('BRANCH') }),
+        'line'       : percentage(counters.find { it.'@type'.equals('LINE') }),
+        'complexity' : percentage(counters.find { it.'@type'.equals('COMPLEXITY') }),
+        'method'     : percentage(counters.find { it.'@type'.equals('METHOD') }),
+        'class'      : percentage(counters.find { it.'@type'.equals('CLASS') })
+    ]
+
+
+    def failures = []
+    metrics.each {
+      def limit = coverageLimits[it.key]
+      if (it.value < limit) {
+        failures.add("- ${it.key} coverage rate is: ${it.value}%, minimum is ${limit}%")
+      }
+    }
+
+    if (failures) {
+      logger.quiet("------------------ Code Coverage Failed -----------------------")
+      failures.each {
+        logger.quiet(it)
+      }
+      logger.quiet("---------------------------------------------------------------")
+      throw new GradleException("Code coverage failed")
+    } else {
+      logger.quiet("Passed Code Coverage Checks")
+    }
+  }
+}
+
+check.dependsOn jacocoTestReport
+
+findbugs {
+  toolVersion = '3.0.1'
+  effort = 'max'
+  sourceSets = [sourceSets.main]
+}
+
+tasks.withType(FindBugs) {
+  group = 'Findbugs'
+  excludeFilter = file("$rootDir/gradle/config/findbugs-exclude.xml")
+  reports {
+    xml.enabled = runningInCI
+    html.enabled = !runningInCI
+  }
+}
+
+pmd {
+  toolVersion = '5.4.0'
+  sourceSets = [sourceSets.main]
+  ignoreFailures = true
+}
+
+pmdMain {
+  ruleSetFiles = files("$rootDir/gradle/config/pmd-rulesets.xml")
+  excludes = ['**/com/adobe/datum/common/api/DatumProto.java',
+              '**/com/adobe/datum/example/protobuf/api/ExampleProto.java']
+}
+
+tasks.withType(Pmd) {
+  group = 'PMD'
+  reports {
+    xml.enabled = true
+    html.enabled = true
+  }
+}
+
+task pmdReport(dependsOn: pmdMain,
+               group: 'Verification',
+               description: 'Generates a HTML report after executing PMD checks.') << {
+  ant.xslt(in: "$reporting.baseDir/pmd/main.xml",
+           style: "$rootDir/gradle/config/pmd-report.xslt",
+           out: "$reporting.baseDir/pmd/main.html")
+}
+
+task pmdFinalize(dependsOn: pmdReport,
+                 group: 'Verification',
+                 description: 'Check warning types to limit higer priority warnings') << {
+  def report = file("${project.buildDir}/reports/pmd/main.xml")
+  logger.lifecycle("Checking pmd results: ${report}")
+
+  def pmdRootNode = new XmlParser().parse(report)
+
+  def violations = pmdRootNode.depthFirst().findAll { it.name() == 'violation' }
+  def metrics = [:]
+  metrics << [
+      'error_high'  : violations.findAll { it.'@priority'.equals('1') }.size(),
+      'error_normal': violations.findAll { it.'@priority'.equals('2') }.size(),
+      'warn_high'   : violations.findAll { it.'@priority'.equals('3') }.size(),
+      'warn_normal' : violations.findAll { it.'@priority'.equals('4') }.size(),
+      'normal'      : violations.findAll { it.'@priority'.equals('5') }.size(),
+      'total'       : violations.size()
+  ]
+
+  def failures = []
+  metrics.each {
+    def limit = pmdLimits[it.key]
+    if (it.value > limit) {
+      failures.add("- ${it.key} warnings: ${it.value}, maximum allowed is ${limit}")
+    }
+  }
+
+  if (failures) {
+    logger.quiet("------------------  PMD Check Failed -----------------------")
+    failures.each {
+      logger.quiet(it)
+    }
+    logger.quiet("------------------------------------------------------------")
+    throw new GradleException("PMD check failed")
+  } else {
+    logger.quiet("Passed PMD check")
+  }
+}
+
+check.dependsOn pmdFinalize
+
+codenarcTest {
+  configFile = file("$rootDir/gradle/config/codenarc-testrules.groovy")
+}
+
+codenarc {
+  toolVersion = 0.21
+  reportFormat = 'html'
+  ignoreFailures = false
+}

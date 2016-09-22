@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package datum.api;
+
+option java_package = "com.adobe.datum.common.api";
+option java_outer_classname = "DatumProto";
+option optimize_for = SPEED;
+
+message DatumRequestProto {
+  enum RequestType {
+    DOWNLOAD = 0;
+    UPLOAD = 1;
+  }
+  required RequestType type = 1;
+  required string parameter_type = 2;
+  required bytes parameter_body = 3;
+  required string prototype_name = 4;
+}

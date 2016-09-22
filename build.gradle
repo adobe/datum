@@ -1,0 +1,66 @@
+buildscript {
+  apply from: "${rootDir}/gradle/dependencies.gradle"
+
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+
+  dependencies {
+    gradle_plugins.each { name, dependency -> classpath dependency }
+  }
+}
+
+apply plugin: 'net.anshulverma.gradle.release'
+
+allprojects {
+  apply plugin: 'idea'
+
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+}
+
+subprojects {
+  apply plugin: 'java'
+  apply plugin: 'groovy'
+
+  ext {
+    pmdLimits = [
+        'error_high'  : 0,
+        'error_normal': 10,
+        'warn_high'   : 999,
+        'warn_normal' : 999,
+        'normal'      : 999,
+        'total'       : 999
+    ]
+    runningInCI = project.hasProperty('CI')
+    isExampleProject = project.name.indexOf('example') > 0
+  }
+
+  apply from: "${rootDir}/gradle/dependencies.gradle"
+  apply from: "${rootDir}/gradle/code_quality.gradle"
+
+  if (!isExampleProject) {
+    apply from: "${rootDir}/gradle/publish.gradle"
+    apply from: "${rootDir}/gradle/testing.gradle"
+  }
+
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+
+  group = 'com.adobe.datum'
+
+  configurations {
+    provided
+  }
+
+  dependencies {
+    compile libraries.slf4j_api
+  }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.9'
+}

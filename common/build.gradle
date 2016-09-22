@@ -1,0 +1,25 @@
+ext {
+  description = 'Shared utility classes between datum client and server'
+
+  coverageLimits = [
+      'instruction': 21,
+      'branch'     : 7,
+      'line'       : 25,
+      'complexity' : 24,
+      'method'     : 27,
+      'class'      : 18
+  ]
+}
+
+dependencies {
+  compile libraries.protobuf
+  compile libraries.lombok
+  compile libraries.commonsLang3
+  compile libraries.netty
+  compile libraries.guava
+  compile libraries.jsr
+
+  compile test_libraries.spock
+}
+
+apply from: "$rootDir/gradle/protobuf.gradle"

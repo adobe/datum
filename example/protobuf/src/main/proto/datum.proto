@@ -1,0 +1,44 @@
+syntax = "proto2";
+
+package datum.example.protobuf.api;
+
+option java_package = "com.adobe.datum.example.protobuf.api";
+option java_outer_classname = "ExampleProto";
+option optimize_for = SPEED;
+
+message PersonProto {
+  required int32 id = 1;
+  required string name = 2;
+  required string phoneNumber = 3;
+  required string email = 4;
+  required string lastLogin = 5;
+  required string company = 6;
+  required string companyId = 7;
+}
+
+message PersonDownloadRequestProto {
+  required string query = 1;
+}
+
+message AddressProto {
+  required int64 id = 1;
+  required string street = 2;
+  required string city = 3;
+  required string state= 4;
+  required string zip = 5;
+  required string country = 6;
+  required string coordinates = 7;
+}
+
+message AddressDownloadRequestProto {
+  required int32 count = 1;
+}
+
+message PersonAddressProto {
+  required PersonProto person = 1;
+  required AddressProto address = 2;
+}
+
+message PersonAddressUploadRequestProto {
+  required string id = 1;
+}
