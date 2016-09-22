@@ -71,7 +71,7 @@ repositories {
 }
 
 dependencies {
-  compile 'com.adobe.datum:datum-server:0.1.0'
+  compile 'com.adobe.datum:datum-server:0.0.1-SNAPSHOT'
   // similarly, you can add dependency on datum-client in case you are writing a client
 }
 ```
