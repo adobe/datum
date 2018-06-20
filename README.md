@@ -423,11 +423,5 @@ $ ./gradlew release
 
 ## Contributing
 
-Contributions are always welcome. Please follow these guidelines if you
-want to suggest any changes:
+Contributions are always welcome. Check out our [contribution guidelines](CONTRIBUTING.md) for more information.
 
-1. Fork it (https://github.com/datum/datum)
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
