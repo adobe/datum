@@ -4,6 +4,10 @@ Provides an API that allows users to easily build data streaming
 applications that are fault tolerant, easy on resources and rely on
 non-blocking I/O.
 
+## Deprecated
+
+This project is no longer maintained and is in an archived state. If you wish to revive the project, please consider forking it.
+
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc/generate-toc again -->
 **Table of Contents**
 
